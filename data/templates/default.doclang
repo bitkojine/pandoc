@@ -1,4 +1,4 @@
-<doclang version="0.6">
+<doclang version="0.6" xmlns="https://www.doclang.ai/ns/v0">
 $if(title)$
 <head>
 $if(title)$

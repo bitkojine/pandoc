@@ -15,6 +15,7 @@ module Text.Pandoc.Writers.DocLang
   ) where
 
 import Data.List (intersperse)
+import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Pandoc.Class.PandocMonad (PandocMonad)
@@ -50,7 +51,8 @@ blocksToDocLang opts bs = vcat <$> mapM (blockToDocLang opts) bs
 -- | Convert a Block to DocLang XML.
 blockToDocLang :: PandocMonad m => WriterOptions -> Block -> m (Doc Text)
 blockToDocLang opts = \case
-  Plain ils -> inlinesToDocLang opts ils
+  Plain ils ->
+    inTagsIndented "text" <$> inlinesToDocLang opts ils
   Para  ils ->
     inTagsIndented "text" <$> inlinesToDocLang opts ils
   LineBlock lns -> do
@@ -81,7 +83,14 @@ blockToDocLang opts = \case
   HorizontalRule -> return mempty
   Table _ caption colspecs thead tbodies tfoot ->
     tableToDocLang opts caption colspecs thead tbodies tfoot
-  Figure _ _ body -> blockToDocLang opts (Div nullAttr body)
+  Figure _ (Caption _ caption) body -> do
+    let (url, alt) = extractImage body
+    captionDoc <- if null caption then return mempty
+                  else inTagsSimple "caption" <$> blocksToDocLang opts caption
+    let src = if T.null url then mempty
+              else slfClose "src" [("uri", escapeStringForXML url)] <> cr
+    altDoc <- inlinesToDocLang opts alt
+    return $ inTagsIndented "picture" $ captionDoc <> src <> altDoc
   Div _ bs -> blocksToDocLang opts bs
 
 -- | Convert a definition list.
@@ -171,7 +180,12 @@ inlineToDocLang opts = \case
     return $ inTagsSimple "code" $ literal $ escapeStringForXML code
   Math _ tex      -> return $ inTagsSimple "formula" $ literal tex
   Link _attr ils (url, _) ->
-    subInlines ils >>= \d -> return $ d <> literal (" (" <> url <> ")")
+    subInlines ils >>= \d -> return $ d <> literal (" (" <> escapeStringForXML url <> ")")
+  Image _attr ils (url, _) ->
+    inTagsIndented "picture" <$> do
+      let src = slfClose "src" [("uri", escapeStringForXML url)]
+      alt <- inlinesToDocLang opts ils
+      return $ src <> cr <> alt
   RawInline (Format f) s
     | f `elem` ["doclang", "xml"] -> return $ literal s
     | otherwise -> return mempty
@@ -199,6 +213,21 @@ slfClose tagType attribs =
   where
     attrDoc (k, v) = char ' ' <> text (T.unpack k) <> "=\"" <>
                      text (T.unpack (escapeStringForXML v)) <> "\""
+
+-- | Extract the first Image's URL and alt text from a list of blocks.
+extractImage :: [Block] -> (Text, [Inline])
+extractImage = go
+  where
+    go [] = ("", [])
+    go (Plain ils : _) = extractImageInline ils
+    go (Para ils : _)  = extractImageInline ils
+    go (Div _ bs : _)  = go bs
+    go (_ : rest)      = go rest
+
+    extractImageInline :: [Inline] -> (Text, [Inline])
+    extractImageInline [] = ("", [])
+    extractImageInline (Image _ ils (url, _) : _) = (url, ils)
+    extractImageInline (_ : rest) = extractImageInline rest
 
 -- literal is from Text.DocLayout
 
