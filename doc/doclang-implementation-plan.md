@@ -139,6 +139,14 @@ When working on this codebase, you must:
    existing list to minimize diff.
 4. **Keep the Writer and Reader symmetric** — if the Writer emits something,
    the Reader must parse it and vice versa.
-5. **Run `stack build` and `stack test pandoc:test-pandoc --ta='-p doclang'`
-   after every meaningful change.**
-6. **Commit DocLang logic changes separately** from upstream merges.
+5. **Build with `-Werror` to catch CI failures early.** The CI pipeline uses
+   `--ghc-option=-Werror`. Always run:
+   ```
+   stack build --fast --ghc-options='-Werror'
+   ```
+   before committing. A plain `stack build` may succeed while CI fails.
+6. **Run doclang tests after every change:**
+   ```
+   stack test pandoc:test-pandoc --ta='-p doclang'
+   ```
+7. **Commit DocLang logic changes separately** from upstream merges.
