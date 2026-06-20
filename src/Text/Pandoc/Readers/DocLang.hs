@@ -24,7 +24,6 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Map.Strict as M
 import Text.Pandoc.Builder
 import Text.Pandoc.Class.PandocMonad (PandocMonad)
-import Text.Pandoc.Definition
 import Text.Pandoc.Error (PandocError (..))
 import Text.Pandoc.Options (ReaderOptions)
 import Text.Pandoc.Sources (ToSources(..), sourcesToText)
@@ -259,9 +258,9 @@ parseCellContent (Elem e : _)
                               "location","caption","custom"] = [Plain []]
 parseCellContent cs = 
   let (texts, _) = span isCellContent cs
-      str = T.concat [s | Text (CData _ s _) <- texts]
-  in if T.all isSpace str then [Plain []]
-     else [Plain [Str $ T.strip str]]
+      txt = T.concat [s | Text (CData _ s _) <- texts]
+  in if T.all isSpace txt then [Plain []]
+     else [Plain [Str $ T.strip txt]]
 
 isCellContent :: Content -> Bool
 isCellContent (Text _) = True
