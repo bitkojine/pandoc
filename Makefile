@@ -250,6 +250,10 @@ validate-docx-golden-tests2: ## validate docx golden tests using OOXMLValidator
 	sh ./tools/validate-docx2.sh test/docx/golden/
 .PHONY: validate-docx-golden-tests2
 
+validate-doclang: ## validate doclang tests against official XSD + Schematron
+	sh ./test/validate-doclang.sh
+.PHONY: validate-doclang
+
 node_modules/.bin/ace:
 	npm install @daisy/ace
 

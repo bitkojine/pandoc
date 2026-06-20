@@ -56,6 +56,7 @@ data-files:
                  data/templates/default.html5
                  data/templates/default.chunkedhtml
                  data/templates/default.djot
+                 data/templates/default.doclang
                  data/templates/default.docbook4
                  data/templates/default.docbook5
                  data/templates/default.jats_archiving
@@ -646,6 +647,7 @@ library
                    Text.Pandoc.Readers.Typst,
                    Text.Pandoc.Readers.Djot,
                    Text.Pandoc.Readers.Pod,
+                   Text.Pandoc.Readers.DocLang,
                    Text.Pandoc.Writers,
                    Text.Pandoc.Writers.Native,
                    Text.Pandoc.Writers.XML,
@@ -660,6 +662,7 @@ library
                    Text.Pandoc.Writers.LaTeX,
                    Text.Pandoc.Writers.ConTeXt,
                    Text.Pandoc.Writers.Djot,
+                   Text.Pandoc.Writers.DocLang,
                    Text.Pandoc.Writers.Typst,
                    Text.Pandoc.Writers.OpenDocument,
                    Text.Pandoc.Writers.Texinfo,

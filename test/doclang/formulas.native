@@ -1,0 +1,2 @@
+[Para [Str "Inline:",Space,Math InlineMath "E = mc^2",Str "."]
+,Para [Math DisplayMath "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}"]]

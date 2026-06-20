@@ -1,0 +1,12 @@
+<text>
+  <picture>
+    <src uri="chart.svg"/>
+    chart
+  </picture>
+</text>
+<text>
+  <picture>
+    <src uri="photo.jpg"/>
+    photo
+  </picture>
+</text>

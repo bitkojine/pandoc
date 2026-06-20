@@ -1,0 +1,6 @@
+<text>
+  Inline: <formula>E = mc^2</formula>.
+</text>
+<text>
+  <formula>\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}</formula>
+</text>

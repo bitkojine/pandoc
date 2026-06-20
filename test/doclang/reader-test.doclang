@@ -1,0 +1,13 @@
+<doclang version="0.6" xmlns="https://www.doclang.ai/ns/v0">
+<head>
+  <title>Test Document</title>
+  <language>en</language>
+</head>
+<text>Hello world</text>
+<code><label value="haskell"/>main = putStrLn "hi"</code>
+<formula>E = mc^2</formula>
+<picture><src uri="img.png"/></picture>
+<list class="ordered"><ldiv/>First<ldiv/>Second</list>
+<page_break/>
+<text>More content</text>
+</doclang>

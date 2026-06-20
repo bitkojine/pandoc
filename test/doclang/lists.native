@@ -1,0 +1,8 @@
+[BulletList [[Plain [Str "First"]]
+            ,[Plain [Str "Second"]]]
+,OrderedList (1,DefaultStyle,DefaultDelim)
+  [[Plain [Str "One"]]
+  ,[Plain [Str "Two"]]]
+,OrderedList (1,UpperAlpha,DefaultDelim)
+  [[Plain [Str "A"]]
+  ,[Plain [Str "B"]]]]
