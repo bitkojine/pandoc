@@ -120,7 +120,7 @@ parseTopLevelElem e = case qName (elName e) of
   "footnote" -> do
     content <- parseContent $ elContent e
     return $ para (note (plain (fromList content)))
-  "page_break" -> return mempty
+  "page_break" -> return $ horizontalRule
   _ -> return mempty
 
 -- | Get attribute value from an element.

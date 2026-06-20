@@ -9,6 +9,7 @@
   This is a set of tests for pandoc. Most of them are adapted from John Gruber’s
   markdown test suite.
 </text>
+<page_break/>
 <heading>Headers</heading>
 <heading level="2">
   Level 2 with an embedded link (/url)
@@ -38,6 +39,7 @@
 <text>
   with no blank line
 </text>
+<page_break/>
 <heading>Paragraphs</heading>
 <text>
   Here’s a regular paragraph.
@@ -53,6 +55,7 @@
 <text>
   There should be a hard line break here.
 </text>
+<page_break/>
 <heading>Block Quotes</heading>
 <text>
   E-mail style:
@@ -92,6 +95,7 @@
 <text>
   And a following paragraph.
 </text>
+<page_break/>
 <heading>Code Blocks</heading>
 <text>
   Code:
@@ -115,6 +119,7 @@
 
   These should not be escaped:  \$ \\ \> \[ \{]]></content>
 </code>
+<page_break/>
 <heading>Lists</heading>
 <heading level="2">
   Unordered
@@ -320,12 +325,12 @@
 <text>
   Autonumbering:
 </text>
-<list>
+<list class="ordered">
   <ldiv/>Autonumber.
   <ldiv/><text>
     More.
   </text>
-  <list>
+  <list class="ordered">
     <ldiv/>Nested.
   </list>
 </list>
@@ -338,6 +343,7 @@
 <text>
   B. Williams
 </text>
+<page_break/>
 <heading>Definition Lists</heading>
 <text>
   Tight using spaces:
@@ -530,6 +536,7 @@
 <text>
   Hr’s:
 </text>
+<page_break/>
 <heading>Inline Markup</heading>
 <text>
   This is <italic>emphasized</italic>, and so <italic>is this</italic>.
@@ -572,6 +579,7 @@
   These should not be superscripts or subscripts, because of the unescaped
   spaces: a^b c^d, a~b c~d.
 </text>
+<page_break/>
 <heading>Smart quotes, ellipses, dashes</heading>
 <text>
   Hello, said the spider. Shelob is my name.
@@ -598,6 +606,7 @@
 <text>
   Ellipses…and…and….
 </text>
+<page_break/>
 <heading>LaTeX</heading>
 <list>
   <ldiv/>
@@ -625,6 +634,7 @@
 <text>
   Here’s a LaTeX table:
 </text>
+<page_break/>
 <heading>Special Characters</heading>
 <text>
   Here is some unicode:
@@ -699,6 +709,7 @@
 <text>
   Minus: -
 </text>
+<page_break/>
 <heading>Links</heading>
 <heading level="2">
   Explicit
@@ -805,6 +816,7 @@
 <code>
   <content><![CDATA[or here: <http://example.com/>]]></content>
 </code>
+<page_break/>
 <heading>Images</heading>
 <text>
   From Voyage dans la Lune by Georges Melies (1902):
@@ -821,6 +833,7 @@
     movie
   </picture> icon.
 </text>
+<page_break/>
 <heading>Footnotes</heading>
 <text>
   Here is a footnote reference,<footnote>

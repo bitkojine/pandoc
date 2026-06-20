@@ -71,10 +71,10 @@ blockToDocLang opts = \case
     | f `elem` ["doclang", "xml"] -> return $ literal s
     | otherwise -> return mempty
   BlockQuote bs -> blocksToDocLang opts bs
-  OrderedList (start, style, _) items ->
-    listToDocLang opts start style items
+  OrderedList _ items ->
+    listToDocLang opts True items
   BulletList items ->
-    listToDocLang opts 1 DefaultStyle items
+    listToDocLang opts False items
   DefinitionList items ->
     deflistToDocLang opts items
   Header level _ ils ->
@@ -82,7 +82,7 @@ blockToDocLang opts = \case
        then inTagsSimple "heading"
        else inTags True "heading" [("level", tshow level)]) <$>
       inlinesToDocLang opts ils
-  HorizontalRule -> return mempty
+  HorizontalRule -> return $ slfClose "page_break" []
   Table _ caption colspecs thead tbodies tfoot ->
     tableToDocLang opts caption colspecs thead tbodies tfoot
   Figure _ (Caption _ caption) body -> do
@@ -110,12 +110,10 @@ deflistToDocLang opts items = do
 
 -- | Convert a list.
 listToDocLang :: PandocMonad m
-              => WriterOptions -> Int -> ListNumberStyle -> [[Block]]
+              => WriterOptions -> Bool -> [[Block]]
               -> m (Doc Text)
-listToDocLang opts start style items = do
-  let attrs   = if style /= DefaultStyle || start /= 1
-                   then [("class", "ordered")]
-                   else []
+listToDocLang opts isOrdered items = do
+  let attrs   = if isOrdered then [("class", "ordered")] else []
       listItem itemBlocks = do
         inner <- virtualContent opts itemBlocks
         return $ slfClose "ldiv" [] <> inner
