@@ -149,4 +149,101 @@ When working on this codebase, you must:
    ```
    stack test pandoc:test-pandoc --ta='-p doclang'
    ```
-7. **Commit DocLang logic changes separately** from upstream merges.
+7. **Validate against official DocLang XSD/Schematron after every meaningful change:**
+   ```
+   bash test/validate-doclang.sh
+   ```
+   Requires Python `doclang` package (`pip install doclang`).
+8. **Commit DocLang logic changes separately** from upstream merges.
+
+## Work Tracker
+
+Status legend: `[ ]` = not started, `[~]` = in progress, `[x]` = done.
+
+### Phase 1: Baseline semantic subset (done)
+
+| Status | Item |
+|--------|------|
+| [x] | Writer: text, heading, list, table, code, formula, picture, footnote |
+| [x] | Reader: same elements |
+| [x] | XML safety: escaping, CDATA, namespace |
+| [x] | Template with head metadata |
+| [x] | Ordered list `class="ordered"` attribute |
+| [x] | `<page_break/>` for `HorizontalRule` and round-trip |
+| [x] | Block `<formula>` → `DisplayMath`, inline → `InlineMath` |
+| [x] | `<picture class>` attribute round-trip |
+| [x] | `<head>` whitespace-tolerant parsing |
+| [x] | CI: build with `-Werror`, no unused imports, no shadowing |
+| [x] | Test suite: 8 golden tests (writer basic, tables, formulas, pictures, lists, code, pagebreak, reader) |
+| [x] | Official XSD/Schematron validation passing for all output |
+
+### Phase 2: Element heads (via Attr kv-pairs)
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | High | `<label>` round-trip | Store in Attr classes/kv, emit in element head |
+| [ ] | High | `<location>` round-trip | Store as x1,y1,x2,y2 kv-pairs |
+| [ ] | Medium | `<thread>` round-trip | thread_id as kv-pair |
+| [ ] | Medium | `<layer>` round-trip | layer value as kv-pair |
+| [ ] | Medium | `<caption>` in element heads | Already handled in tables/figures, generalize |
+| [ ] | Low | `<custom>` round-trip | Custom metadata as RawBlock |
+| [ ] | Medium | `<href>` in element heads | Currently inline `text (url)`, move to element head |
+| [ ] | Low | `<xref>` round-trip | Cross-reference by thread_id |
+
+### Phase 3: Rich lists
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | Medium | `<marker>` round-trip | Store marker text in Attr kv-pairs |
+| [ ] | Medium | `<checkbox>` round-trip | Store selected/unselected in Attr classes |
+| [ ] | Low | List markers from Pandax AST | Pandoc has no marker concept, use RawBlock |
+
+### Phase 4: Rich OTSL tables
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | Medium | `<srow/>` support | Section row headers in OTSL |
+| [ ] | Medium | `<lcel/>` (colspan) | Use `(colspan,N)` kv-pairs on cells |
+| [ ] | Medium | `<ucel/>` (rowspan) | Use `(rowspan,N)` kv-pairs on cells |
+| [ ] | Low | `<rhed/>` (row header) | Row-header cells |
+| [ ] | Low | `<corn/>` (corner cell) | Corner cell in header |
+| [ ] | Low | `<xcel/>` (cross span) | Combined colspan+rowspan |
+| [ ] | Medium | `<caption>` extraction in reader | Extract caption from table element head |
+| [ ] | Medium | `<footnote>` block content in reader | Currently only parses inline |
+
+### Phase 5: Fields / forms
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | Low | `<field_region>` | Map to `Div class="field_region"` |
+| [ ] | Low | `<field_item>` | Map to `Div class="field_item"` |
+| [ ] | Low | `<key>`, `<value>`, `<field_heading>` | Map to `Span` with classes |
+| [ ] | Low | `<hint>` | Map to `Span class="hint"` |
+
+### Phase 6: Layout and pages
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | Low | `<page_break/>` only as direct child | Currently emitted for HR anywhere |
+| [ ] | Low | `<page_header>`, `<page_footer>` | Template-level elements |
+| [ ] | Low | `<default_resolution>` in template | Document head |
+| [ ] | Low | `<thread>` for cross-page content | Multi-page document support |
+| [ ] | Low | `<group>` container element | Div-like grouping |
+
+### Phase 7: Polish
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | Low | `<handwriting>` formatting | Span with handwriting class |
+| [ ] | Low | `<rtl>` formatting | Right-to-left text |
+| [ ] | Low | `<index>` structure | OTSL-based index |
+| [ ] | Low | `<tabular>` chart data | Structured chart data inside picture |
+| [ ] | Low | `<smallcaps>` → unwrap | Spec has no smallcaps, currently unwrapped OK |
+
+### CI / QA
+
+| Status | Priority | Item | Notes |
+|--------|----------|------|-------|
+| [ ] | High | Auto-run `validate-doclang.sh` in CI | Integrate into GitHub Actions |
+| [ ] | Medium | Round-trip property test | Random DocLang → read → write → validate |
+| [ ] | Low | Fuzz testing | Generate random AST, write, validate |

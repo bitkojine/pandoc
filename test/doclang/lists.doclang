@@ -1,0 +1,12 @@
+<list>
+  <ldiv/>First
+  <ldiv/>Second
+</list>
+<list class="ordered">
+  <ldiv/>One
+  <ldiv/>Two
+</list>
+<list class="ordered">
+  <ldiv/>A
+  <ldiv/>B
+</list>

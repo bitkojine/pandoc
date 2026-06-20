@@ -1,0 +1,9 @@
+<code>
+  <label value="haskell"/>
+  <content>
+    main = putStrLn &quot;hello&quot;
+  </content>
+</code>
+<text>
+  Use <code>print()</code>.
+</text>

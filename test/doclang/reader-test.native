@@ -1,0 +1,24 @@
+Pandoc
+  Meta
+    { unMeta =
+        fromList
+          [ ( "lang" , MetaString "en" )
+          , ( "title" , MetaInlines [ Str "Test Document" ] )
+          ]
+    }
+  [ Para [ Str "Hello world" ]
+  , CodeBlock ( "" , [] , [] ) "main = putStrLn \"hi\""
+  , Para [ Math DisplayMath "E = mc^2" ]
+  , Para
+      [ Image
+          ( "" , [] , [] ) [ Str "img.png" ] ( "img.png" , "" )
+      ]
+  , OrderedList
+      ( 1 , DefaultStyle , DefaultDelim )
+      [ [ Plain [] ]
+      , [ Plain [ Str "First" ] ]
+      , [ Plain [ Str "Second" ] ]
+      ]
+  , HorizontalRule
+  , Para [ Str "More content" ]
+  ]

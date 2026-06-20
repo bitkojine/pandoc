@@ -189,9 +189,24 @@ tests pandocPath =
   , testGroup "tikiwiki"
     [ test' "reader" ["-r", "tikiwiki", "-w", "native", "-s"]
         "tikiwiki-reader.tikiwiki" "tikiwiki-reader.native" ]
+  , testGroup "doclang"
+    [ testGroup "writer" $ writerTests' "doclang"
+    , test' "formulas" ["-f", "native", "-w", "doclang", "--columns=80"]
+        "doclang/formulas.native" "doclang/formulas.doclang"
+    , test' "pictures" ["-f", "native", "-w", "doclang", "--columns=80"]
+        "doclang/pictures.native" "doclang/pictures.doclang"
+    , test' "lists" ["-f", "native", "-w", "doclang", "--columns=80"]
+        "doclang/lists.native" "doclang/lists.doclang"
+    , test' "code" ["-f", "native", "-w", "doclang", "--columns=80"]
+        "doclang/code.native" "doclang/code.doclang"
+    , test' "pagebreak" ["-f", "native", "-w", "doclang", "--columns=80"]
+        "doclang/pagebreak.native" "doclang/pagebreak.doclang"
+    , test' "reader" ["-f", "doclang", "-w", "native", "-s"]
+        "doclang/reader-test.doclang" "doclang/reader-test.native"
+    ]
   , testGroup "other writers" $ map (\f -> testGroup f $ writerTests' f)
     [ "opendocument" , "context" , "texinfo", "icml", "tei"
-    , "man" , "plain" , "xwiki", "zimwiki", "doclang" ]
+    , "man" , "plain" , "xwiki", "zimwiki" ]
   , testGroup "writers-lang-and-dir"
     [ test' "latex" ["-f", "native", "-t", "latex", "-s"]
       "writers-lang-and-dir.native" "writers-lang-and-dir.latex"

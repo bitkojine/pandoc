@@ -1,0 +1,2 @@
+[CodeBlock ("",["haskell"],[]) "main = putStrLn \"hello\""
+,Para [Str "Use",Space,Code ("",[],[]) "print()",Str "."]]

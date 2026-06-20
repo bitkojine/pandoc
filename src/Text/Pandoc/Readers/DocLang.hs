@@ -59,6 +59,8 @@ parseDocLang doclang = do
 partitionHead :: [Content] -> (Maybe Element, [Content])
 partitionHead (Elem e : rest)
   | qName (elName e) == "head" = (Just e, rest)
+partitionHead (Text (CData _ s _) : rest)
+  | T.all isSpace s = partitionHead rest
 partitionHead cs = (Nothing, cs)
 
 -- | Parse metadata <head> element.
@@ -104,12 +106,14 @@ parseTopLevelElem e = case qName (elName e) of
     return $ codeBlockWith ("", [lang | not (T.null lang)], []) codeContent
   "formula" -> do
     let tex = T.strip $ strContent e
-    return $ para (math tex)
+    return $ para (displayMath tex)
   "picture" -> do
     let srcUri = maybe "" id $ attrVal "uri" =<< filterChild (byName "src") e
+    let picClass = maybe "" id $ attrVal "class" e
+    let attrs = ("", [picClass | not (T.null picClass)], [])
     if T.null srcUri
       then return $ para (text "[image]")
-      else return $ para (image srcUri "" (text srcUri))
+      else return $ para (imageWith attrs srcUri "" (text srcUri))
   "list" -> do
     let ordered = attrVal "class" e == Just "ordered"
     items <- getListItems e

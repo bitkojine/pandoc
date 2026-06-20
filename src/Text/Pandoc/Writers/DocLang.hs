@@ -85,14 +85,15 @@ blockToDocLang opts = \case
   HorizontalRule -> return $ slfClose "page_break" []
   Table _ caption colspecs thead tbodies tfoot ->
     tableToDocLang opts caption colspecs thead tbodies tfoot
-  Figure _ (Caption _ caption) body -> do
+  Figure (_, classes, _) (Caption _ caption) body -> do
     let (url, alt) = extractImage body
+    let cls = case classes of (c:_) -> [("class", c)]; _ -> []
     captionDoc <- if null caption then return mempty
                   else inTagsSimple "caption" <$> blocksToDocLang opts caption
     let src = if T.null url then mempty
               else slfClose "src" [("uri", escapeStringForXML url)] <> cr
     altDoc <- inlinesToDocLang opts alt
-    return $ inTagsIndented "picture" $ captionDoc <> src <> altDoc
+    return $ inTags True "picture" cls $ captionDoc <> src <> altDoc
   Div _ bs -> blocksToDocLang opts bs
 
 -- | Convert a definition list.
