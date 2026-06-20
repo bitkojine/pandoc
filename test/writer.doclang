@@ -6,8 +6,8 @@
   <date>July 17, 2006</date>
 </head>
 <text>
-  This is a set of tests for pandoc. Most of them are adapted from John
-  Gruber’s markdown test suite.
+  This is a set of tests for pandoc. Most of them are adapted from John Gruber’s
+  markdown test suite.
 </text>
 <heading>Headers</heading>
 <heading level="2">
@@ -43,9 +43,9 @@
   Here’s a regular paragraph.
 </text>
 <text>
-  In Markdown 1.0.0 and earlier. Version 8. This line turns into a list
-  item. Because a hard-wrapped line in the middle of a paragraph looked
-  like a list item.
+  In Markdown 1.0.0 and earlier. Version 8. This line turns into a list item.
+  Because a hard-wrapped line in the middle of a paragraph looked like a list
+  item.
 </text>
 <text>
   Here’s one with a bullet. * criminey.
@@ -210,8 +210,7 @@
     Item 1, graf one.
   </text>
   <text>
-    Item 1. graf two. The quick brown fox jumped over the lazy dog’s
-    back.
+    Item 1. graf two. The quick brown fox jumped over the lazy dog’s back.
   </text>
   <ldiv/>Item 2.
   <ldiv/>Item 3.
@@ -570,8 +569,8 @@
   H<subscript>many of them</subscript>O.
 </text>
 <text>
-  These should not be superscripts or subscripts, because of the
-  unescaped spaces: a^b c^d, a~b c~d.
+  These should not be superscripts or subscripts, because of the unescaped
+  spaces: a^b c^d, a~b c~d.
 </text>
 <heading>Smart quotes, ellipses, dashes</heading>
 <text>
@@ -617,11 +616,11 @@
 </text>
 <list>
   <ldiv/>To get the famous equation, write <code>$e = mc^2$</code>.
-  <ldiv/>$22,000 is a <italic>lot</italic> of money. So is $34,000. (It
-  worked if lot is emphasized.)
+  <ldiv/>$22,000 is a <italic>lot</italic> of money. So is $34,000. (It worked
+  if lot is emphasized.)
   <ldiv/>Shoes ($20) and socks ($5).
-  <ldiv/>Escaped <code>$</code>: $73 <italic>this should be
-  emphasized</italic> 23$.
+  <ldiv/>Escaped <code>$</code>: $73 <italic>this should be emphasized</italic>
+  23$.
 </list>
 <text>
   Here’s a LaTeX table:
@@ -774,8 +773,7 @@
   URL (http://example.com/?foo=1&amp;bar=2).
 </text>
 <text>
-  Here’s a link with an amersand in the link text:
-  AT&amp;T (http://att.com/).
+  Here’s a link with an amersand in the link text: AT&amp;T (http://att.com/).
 </text>
 <text>
   Here’s an inline link (/script?foo=1&amp;bar=2).
@@ -802,8 +800,7 @@
   Blockquoted: http://example.com/ (http://example.com/)
 </text>
 <text>
-  Auto-links should not occur here:
-  <code>&lt;http://example.com/&gt;</code>
+  Auto-links should not occur here: <code>&lt;http://example.com/&gt;</code>
 </text>
 <code>
   <content><![CDATA[or here: <http://example.com/>]]></content>
@@ -812,40 +809,46 @@
 <text>
   From Voyage dans la Lune by Georges Melies (1902):
 </text>
+<picture>
+  <caption><text>
+    lalune
+  </text></caption><src uri="lalune.jpg"/>
+  lalune
+</picture>
 <text>
-</text>
-<text>
-  Here is a movie icon.
+  Here is a movie <picture>
+    <src uri="movie.jpg"/>
+    movie
+  </picture> icon.
 </text>
 <heading>Footnotes</heading>
 <text>
   Here is a footnote reference,<footnote>
     <text>
-      Here is the footnote. It can go anywhere after the footnote
-      reference. It need not be placed at the end of the document.
+      Here is the footnote. It can go anywhere after the footnote reference. It
+      need not be placed at the end of the document.
     </text>
   </footnote> and another.<footnote>
     <text>
       Here’s the long note. This one contains multiple blocks.
     </text>
     <text>
-      Subsequent blocks are indented to show that they belong to the
-      footnote (as with list items).
+      Subsequent blocks are indented to show that they belong to the footnote
+      (as with list items).
     </text>
     <code>
       <content><![CDATA[  { <code> }]]></content>
     </code>
     <text>
-      If you want, you can indent every line, but you can also be lazy
-      and just indent the first line of each block.
+      If you want, you can indent every line, but you can also be lazy and just
+      indent the first line of each block.
     </text>
-  </footnote> This should <italic>not</italic> be a footnote reference,
-  because it contains a space.[^my note] Here is an inline
-  note.<footnote>
+  </footnote> This should <italic>not</italic> be a footnote reference, because
+  it contains a space.[^my note] Here is an inline note.<footnote>
     <text>
       This is <italic>easier</italic> to type. Inline notes may contain
-      links (http://google.com) and <code>]</code> verbatim characters,
-      as well as [bracketed text].
+      links (http://google.com) and <code>]</code> verbatim characters, as well
+      as [bracketed text].
     </text>
   </footnote>
 </text>

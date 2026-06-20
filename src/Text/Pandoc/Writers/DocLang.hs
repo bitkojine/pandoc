@@ -9,13 +9,15 @@
    Portability : portable
 
 Conversion of 'Pandoc' documents to DocLang XML.
+
+See doc/doclang-implementation-plan.md before modifying this file.
 -}
 module Text.Pandoc.Writers.DocLang
   ( writeDocLang
   ) where
 
 import Data.List (intersperse)
-import Data.Maybe (mapMaybe)
+
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Pandoc.Class.PandocMonad (PandocMonad)
@@ -191,7 +193,6 @@ inlineToDocLang opts = \case
     | otherwise -> return mempty
   Span _ ils -> subInlines ils
   Note bs    -> inTagsIndented "footnote" <$> blocksToDocLang opts bs
-  _          -> return mempty
   where subInlines = inlinesToDocLang opts
 
 -- | Render a code content element, using CDATA when needed.

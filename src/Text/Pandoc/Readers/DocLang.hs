@@ -8,28 +8,36 @@
    Portability : portable
 
 Conversion of DocLang XML to 'Pandoc' document.
+
+See doc/doclang-implementation-plan.md before modifying this file.
 -}
 module Text.Pandoc.Readers.DocLang
   ( readDocLang
   ) where
 
-import Control.Monad (void)
+import Control.Monad.Except (throwError)
 import Data.Char (isSpace)
-import Data.Maybe (catMaybes, fromMaybe, mapMaybe)
+import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import qualified Data.Map.Strict as M
 import Text.Pandoc.Builder
 import Text.Pandoc.Class.PandocMonad (PandocMonad)
 import Text.Pandoc.Definition
 import Text.Pandoc.Error (PandocError (..))
 import Text.Pandoc.Options (ReaderOptions)
-import Text.Pandoc.XML.Light
-import Text.Pandoc.XML (escapeStringForXML)
+import Text.Pandoc.Sources (ToSources(..), sourcesToText)
+import Text.Pandoc.XML.Light hiding (strContent, Attr, attrVal)
 
 -- | Read DocLang XML and return a Pandoc document.
-readDocLang :: PandocMonad m => ReaderOptions -> Text -> m Pandoc
-readDocLang _opts inp = do
-  let tree = parseXMLContents inp
+readDocLang :: (PandocMonad m, ToSources a)
+            => ReaderOptions
+            -> a
+            -> m Pandoc
+readDocLang _opts s = do
+  let inp = sourcesToText (toSources s)
+  let tree = parseXMLContents (TL.fromStrict inp)
   case tree of
     Left e  -> throwError $ PandocParseError
                  ("Could not parse DocLang XML: " <> T.pack (show e))
@@ -43,9 +51,9 @@ parseDocLang doclang = do
   let allContent = elContent doclang
   let (headEls, bodyEls) = partitionHead allContent
   meta <- case headEls of
-           [Elem h] -> parseHead h
-           _        -> return mempty
-  blocks <- concat <$> mapM parseTopLevel bodyEls
+           Just h -> parseHead h
+           Nothing -> return mempty
+  blocks <- mconcat <$> mapM parseTopLevel bodyEls
   return $ Pandoc meta (toList blocks)
 
 -- | Separate optional <head> from body content.
@@ -58,24 +66,24 @@ partitionHead cs = (Nothing, cs)
 parseHead :: PandocMonad m => Element -> m Meta
 parseHead headEl = do
   let childs = onlyElems $ elContent headEl
-      metaMap = foldr addMetaField mempty childs
+      metaMap = foldr addMetaField M.empty childs
   return $ Meta metaMap
   where
-    addMetaField :: Element -> [(Text, MetaValue)] -> [(Text, MetaValue)]
+    addMetaField :: Element -> M.Map Text MetaValue -> M.Map Text MetaValue
     addMetaField e acc =
       let name = qName (elName e)
           textContent = T.strip $ strContent e
       in case name of
-           "title" -> ("title", MetaInlines [Str textContent]) : acc
-           "author" -> let existing = lookup "author" acc
-                       in case existing of
-                            Just (MetaList items) ->
-                              ("author", MetaList (items ++ [MetaInlines [Str textContent]])) :
-                              filter (\(k,_) -> k /= "author") acc
-                            _ -> ("author", MetaList [MetaInlines [Str textContent]]) : acc
-           "date" -> ("date", MetaInlines [Str textContent]) : acc
-           "language" -> ("lang", MetaString textContent) : acc
-           _ -> (name, MetaString textContent) : acc
+           "title" -> M.insert "title" (MetaInlines [Str textContent]) acc
+           "author" -> case M.lookup "author" acc of
+                         Just (MetaList items) ->
+                           M.insert "author"
+                             (MetaList (items ++ [MetaInlines [Str textContent]])) acc
+                         _ -> M.insert "author"
+                                (MetaList [MetaInlines [Str textContent]]) acc
+           "date" -> M.insert "date" (MetaInlines [Str textContent]) acc
+           "language" -> M.insert "lang" (MetaString textContent) acc
+           _ -> M.insert name (MetaString textContent) acc
 
 -- | Parse top-level elements (children of <doclang> or inside <text>).
 parseTopLevel :: PandocMonad m => Content -> m Blocks
@@ -86,20 +94,20 @@ parseTopLevelElem :: PandocMonad m => Element -> m Blocks
 parseTopLevelElem e = case qName (elName e) of
   "text" -> do
     content <- parseContent $ elContent e
-    return $ para content
+    return $ para (fromList content)
   "heading" -> do
     let lvl = maybe 1 (read . T.unpack) $ attrVal "level" e
     content <- parseContent $ elContent e
     return $ header lvl (fromList content)
   "code" -> do
-    let lang = maybe "" strContent $ findChild (byName "label") e
+    let lang = maybe "" strContent $ filterChild (byName "label") e
     let codeContent = getCodeContent e
-    return $ codeBlockWith (nullAttr, [lang | not (T.null lang)], []) codeContent
+    return $ codeBlockWith ("", [lang | not (T.null lang)], []) codeContent
   "formula" -> do
     let tex = T.strip $ strContent e
     return $ para (math tex)
   "picture" -> do
-    let srcUri = maybe "" (attrVal "uri") $ findChild (byName "src") e
+    let srcUri = maybe "" id $ attrVal "uri" =<< filterChild (byName "src") e
     if T.null srcUri
       then return $ para (text "[image]")
       else return $ para (image srcUri "" (text srcUri))
@@ -107,21 +115,18 @@ parseTopLevelElem e = case qName (elName e) of
     let ordered = attrVal "class" e == Just "ordered"
     items <- getListItems e
     if ordered
-      then return $ orderedList items
-      else return $ bulletList items
+      then return $ orderedList (map fromList items)
+      else return $ bulletList (map fromList items)
   "table" -> parseTable e
   "footnote" -> do
     content <- parseContent $ elContent e
-    return $ para (note $ plain content)
+    return $ para (note (plain (fromList content)))
   "page_break" -> return mempty
   _ -> return mempty
 
 -- | Get attribute value from an element.
 attrVal :: Text -> Element -> Maybe Text
-attrVal name e = lookupAttr (byNameAttr name) (elAttribs e)
-
-byNameAttr :: Text -> Attr -> Bool
-byNameAttr name attr = qName (attrKey attr) == name
+attrVal name e = lookupAttrBy (\qn -> qName qn == name) (elAttribs e)
 
 -- | Parse content of a semantic element: text, formatting, and nested blocks.
 parseContent :: PandocMonad m => [Content] -> m [Inline]
@@ -152,7 +157,7 @@ parseInlineElement e = case qName (elName e) of
   _               -> return []
 
 -- | Wrap element children in an inline constructor.
-wrapInlines :: ([Inline] -> Inline) -> Element -> m [Inline]
+wrapInlines :: PandocMonad m => ([Inline] -> Inline) -> Element -> m [Inline]
 wrapInlines ctor e = do
   children <- parseContent $ elContent e
   return [ctor children]
@@ -166,7 +171,7 @@ parseFootnote e = do
 -- | Get code content, preferring <content> child with whitespace preservation.
 getCodeContent :: Element -> Text
 getCodeContent e =
-  case findChild (byName "content") e of
+  case filterChild (byName "content") e of
     Just c  -> strContent c
     Nothing -> strContent e
 
@@ -208,49 +213,42 @@ elemToBlock (Elem e) = case qName (elName e) of
   _         -> Nothing
 elemToBlock _ = Nothing
 
--- | Parse an OTSL table.
 parseTable :: PandocMonad m => Element -> m Blocks
 parseTable e = do
-  let cells = collectTableCells $ elContent e
-  let rows = splitRows cells
+  let rows = collectTableCells $ elContent e
   let (headerRow, dataRows) = case rows of
         (r:rs) -> (r, rs)
         []     -> ([], [])
   let isHeader (OTSLHeader _) = True
       isHeader _ = False
   let hasHeaders = any isHeader headerRow
-  let colCount = case rows of
-        (r:_) -> length r
-        _     -> 1
-  let colspecs = replicate colCount (AlignDefault, ColWidthDefault)
-  let alignments = replicate colCount AlignDefault
-  let widths = replicate colCount ColWidthDefault
+  let cellToBlocks (OTSLHeader bs) = bs
+      cellToBlocks (OTSLData bs)   = bs
+      cellToBlocks OTSLEmpty       = [Plain []]
   let headerBlks = if hasHeaders
-                   then [headerRowToBlocks headerRow]
+                   then map (fromList . cellToBlocks) headerRow
                    else []
-  let bodyBlks = map dataRowToBlocks dataRows
-  let caption = emptyCaption
-  return $ simpleTable (map simpleCell headerBlks) (map (map simpleCell) bodyBlks)
-  where
-    simpleCell blks = (AlignDefault, ColWidthDefault, blks)
+  let bodyBlks = map (map (fromList . cellToBlocks)) dataRows
+  return $ simpleTable headerBlks bodyBlks
 
 data OTSLCell = OTSLHeader [Block]
-              | OTSLData [Block]
+              | OTSLData   [Block]
               | OTSLEmpty
 
-data OTSLRow = OTSLRow [OTSLCell]
-
--- | Collect table cells from flat token sequence.
-collectTableCells :: [Content] -> [OTSLCell]
+-- | Collect table cells from token sequence, grouped into rows.
+collectTableCells :: [Content] -> [[OTSLCell]]
 collectTableCells [] = []
-collectTableCells (Elem e : rest) = case qName (elName e) of
-  "ched" -> OTSLHeader (parseCellContent rest) : collectTableCells (dropCellContent rest)
-  "fcel" -> OTSLData (parseCellContent rest) : collectTableCells (dropCellContent rest)
-  "ecel" -> OTSLEmpty : collectTableCells rest
-  "srow" -> OTSLEmpty : collectTableCells rest
-  "nl"   -> collectTableCells rest
-  _      -> collectTableCells rest
-collectTableCells (_ : rest) = collectTableCells rest
+collectTableCells cs = reverse . map reverse $ go [] cs
+  where
+    go acc [] = [acc | not (null acc)]
+    go acc (Elem e : rest) = case qName (elName e) of
+      "nl"   -> acc : go [] rest
+      "ched" -> go (OTSLHeader (parseCellContent rest) : acc) (dropCellContent rest)
+      "fcel" -> go (OTSLData (parseCellContent rest) : acc) (dropCellContent rest)
+      "ecel" -> go (OTSLEmpty : acc) rest
+      "srow" -> go (OTSLEmpty : acc) rest
+      _      -> go acc rest
+    go acc (_ : rest) = go acc rest
 
 -- | Parse cell content up to the next OTSL token or element head element.
 parseCellContent :: [Content] -> [Block]
@@ -277,27 +275,6 @@ dropCellContent [] = []
 dropCellContent (c@(Elem e) : rest)
   | qName (elName e) `elem` ["fcel","ched","ecel","srow","nl"] = c : rest
 dropCellContent (_ : rest) = dropCellContent rest
-
--- | Split cells into rows at <nl/> boundaries.
-splitRows :: [OTSCell] -> [[OTSCell]]
-splitRows [] = []
-splitRows cs = 
-  let (row, rest) = break isNewline cs
-  in row : splitRows (drop 1 rest)
-
-isNewline :: OTSCell -> Bool
-isNewline _ = False  -- handled in collectTableCells
-
-headerRowToBlocks :: [OTSCell] -> [Block]
-headerRowToBlocks = concatMap cellToBlocks
-
-dataRowToBlocks :: [OTSCell] -> [Block]
-dataRowToBlocks = concatMap cellToBlocks
-
-cellToBlocks :: OTSCell -> [Block]
-cellToBlocks (OTSLHeader bs) = bs
-cellToBlocks (OTSLData bs)   = bs
-cellToBlocks OTSLEmpty       = [Plain []]
 
 -- | Check if an element matches a tag name.
 byName :: Text -> Element -> Bool
