@@ -7,7 +7,9 @@ Pandoc
           ]
     }
   [ Para [ Str "Hello world" ]
-  , CodeBlock ( "" , [] , [] ) "main = putStrLn \"hi\""
+  , CodeBlock
+      ( "" , [ "haskell" ] , [ ( "label" , "haskell" ) ] )
+      "main = putStrLn \"hi\""
   , Para [ Math DisplayMath "E = mc^2" ]
   , Para
       [ Image

@@ -60,12 +60,14 @@ blockToDocLang opts = \case
   LineBlock lns -> do
     linesDoc <- mapM (inlinesToDocLang opts) lns
     return $ inTagsIndented "text" $ hcat $ intersperse space linesDoc
-  CodeBlock (_,classes,_) code -> do
-    let langAttr = case classes of
-          (c:_) -> [("value", c)]
-          _     -> []
-        label  = if null langAttr then mempty
-                 else slfClose "label" langAttr <> cr
+  CodeBlock (_,classes,kvs) code -> do
+    let labelVal = case lookup "label" kvs of
+          Just l  -> [("value", l)]
+          Nothing -> case classes of
+                       (c:_) -> [("value", c)]
+                       _     -> []
+        label  = if null labelVal then mempty
+                 else slfClose "label" labelVal <> cr
     return $ inTagsIndented "code" $ label <> contentElement code
   RawBlock (Format f) s
     | f `elem` ["doclang", "xml"] -> return $ literal s

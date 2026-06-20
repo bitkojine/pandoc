@@ -17,7 +17,7 @@ module Text.Pandoc.Readers.DocLang
 
 import Control.Monad.Except (throwError)
 import Data.Char (isSpace)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
@@ -91,19 +91,38 @@ parseTopLevel :: PandocMonad m => Content -> m Blocks
 parseTopLevel (Elem e) = parseTopLevelElem e
 parseTopLevel _ = return mempty
 
+-- | Extract element head content (label, thread, etc.) from the beginning
+-- of an element's content list. Returns kv-pairs and the remaining body.
+extractHead :: [Content] -> ([(Text, Text)], [Content])
+extractHead = go []
+  where
+    go kvs [] = (reverse kvs, [])
+    go kvs (Text (CData _ s _) : rest)
+      | T.all isSpace s = go kvs rest
+    go kvs (c@(Text _) : rest) = (reverse kvs, c : rest)  -- non-space text: stop head
+    go kvs (Elem e : rest) = case qName (elName e) of
+      "label"  -> go (("label", fromMaybe "" (attrVal "value" e)) : kvs) rest
+      "thread" -> go (("thread", fromMaybe "" (attrVal "thread_id" e)) : kvs) rest
+      _        -> (reverse kvs, Elem e : rest)
+    go kvs (_ : rest) = go kvs rest
+
 parseTopLevelElem :: PandocMonad m => Element -> m Blocks
 parseTopLevelElem e = case qName (elName e) of
   "text" -> do
-    content <- parseContent $ elContent e
+    let (_, body) = extractHead $ elContent e
+    content <- parseContent body
     return $ para (fromList content)
   "heading" -> do
     let lvl = maybe 1 (read . T.unpack) $ attrVal "level" e
-    content <- parseContent $ elContent e
+    let (_, body) = extractHead $ elContent e
+    content <- parseContent body
     return $ header lvl (fromList content)
   "code" -> do
-    let lang = maybe "" strContent $ filterChild (byName "label") e
-    let codeContent = getCodeContent e
-    return $ codeBlockWith ("", [lang | not (T.null lang)], []) codeContent
+    let (kvs, body) = extractHead $ elContent e
+    let lang = lookup "label" kvs
+    let codeContent = bodyContent body
+    let langCls = case lang of Just l -> [l]; Nothing -> []
+    return $ codeBlockWith ("", langCls, kvs) codeContent
   "formula" -> do
     let tex = T.strip $ strContent e
     return $ para (displayMath tex)
@@ -171,12 +190,12 @@ parseFootnote e = do
   content <- parseContent $ elContent e
   return [Note [Plain content]]
 
--- | Get code content, preferring <content> child with whitespace preservation.
-getCodeContent :: Element -> Text
-getCodeContent e =
-  case filterChild (byName "content") e of
-    Just c  -> strContent c
-    Nothing -> strContent e
+-- | Get text content from element body, preferring <content> child.
+bodyContent :: [Content] -> Text
+bodyContent [] = ""
+bodyContent (Elem e : _)
+  | qName (elName e) == "content" = strContent e
+bodyContent cs = T.concat [s | Text (CData _ s _) <- cs]
 
 -- | Parse list items from a <list> element.
 getListItems :: PandocMonad m => Element -> m [[Block]]

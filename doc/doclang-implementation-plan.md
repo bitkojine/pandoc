@@ -181,7 +181,7 @@ Status legend: `[ ]` = not started, `[~]` = in progress, `[x]` = done.
 
 | Status | Priority | Item | Notes |
 |--------|----------|------|-------|
-| [ ] | High | `<label>` round-trip | Store in Attr classes/kv, emit in element head |
+| [x] | High | `<label>` round-trip | Store in Attr classes/kv, emit in element head |
 | [ ] | High | `<location>` round-trip | Store as x1,y1,x2,y2 kv-pairs |
 | [ ] | Medium | `<thread>` round-trip | thread_id as kv-pair |
 | [ ] | Medium | `<layer>` round-trip | layer value as kv-pair |
